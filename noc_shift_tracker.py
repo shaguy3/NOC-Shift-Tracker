@@ -1,6 +1,11 @@
 import openpyxl
 from datetime import date, datetime, timedelta
 
+HOURLY_RATE = 30
+SHIFT_RATES = [1, 1.5, 1.5, 2, 2.5, 1.25, 1.5]
+DRIVES_PAY = 26
+HEALTH_PAY = 1.2
+
 
 def add_to_db(sheet):
     db_wb = openpyxl.load_workbook('db.xlsx')
@@ -24,6 +29,9 @@ def purge_db():
     db_sheet['C1'] = 'Shift end'
 
     db_wb.save('db.xlsx')
+
+
+# TODO: Write a function that will organize the db by date.
 
 
 def get_months_shifts(month):
@@ -59,7 +67,7 @@ def get_months_shifts(month):
 
 def split_to_minutes(shift):
     splitted_shift = []
-    current_minute = shift[0]
+    current_minute = shift[0] + timedelta(minutes=1)
     while current_minute <= shift[1]:
         splitted_shift.append(current_minute)
         current_minute += timedelta(minutes=1)
@@ -91,37 +99,56 @@ def minute_cat(current_minute):
             return 2  # Night
 
 
-def categorize_shift(shift):
+def organize_shift(shift):
     splited_shift = split_to_minutes(shift)
     minutes_worked = 0  # For the overtime calculations
-    shift_counters = [0, 0, 0, 0, 0]  # [day, night, friday_morning, saturday_night, saturday]
+    shift_counters = [0, 0, 0, 0, 0, 0, 0]
+    last_minute_cat = 0
+    # [day, night, friday_morning, saturday_night, saturday, overtime, extended overtime]
 
-    # TODO: Go over each minute, get it's category in the week, and increment the specific category's counter.
-
-    # TODO: If the shift enters into overtime from a regular shift, increment the overtime counter.
-
-    # TODO: If the shift enters continues after two overtime hours, increment the extended overtime counter.
-
-    # TODO: If the shift enters into overtime from an irregular shift, increment the same irregular shift.
+    for current_minute in splited_shift:
+        current_cat = minute_cat(current_minute)
+        if minutes_worked >= 480:
+            if minutes_worked >= 600:
+                shift_counters[6] += 1
+            elif last_minute_cat in [2, 3, 4, 5]:
+                shift_counters[last_minute_cat - 1] += 1
+            else:
+                shift_counters[5] += 1
+        else:
+            shift_counters[current_cat - 1] += 1
+            last_minute_cat = current_cat
+        minutes_worked += 1
 
     return shift_counters
 
 
-def shift_calc(shift):
-    shift_counters = categorize_shift(shift)
+def month_calc(month_shifts, hourly_rate, shift_rates, drives_pay, health_pay):
+    gross_pay = 0
+    minute_rate = hourly_rate / 60
+    for shift in month_shifts:
+        organized_shift = organize_shift(shift)
+        shift_pay = [a * b * minute_rate for a, b in zip(organized_shift, shift_rates)]
+        gross_pay += sum(shift_pay)
+        gross_pay += drives_pay
+        gross_pay += health_pay
+    print(gross_pay)
+
+
+# TODO: Write a function that will calculate the net pay for a given month.
 
 
 my_wb = openpyxl.load_workbook('may_2019.xlsx')
 my_sheet = my_wb['Sheet1']
 
 may_shifts = get_months_shifts('05')
-for may_shift in may_shifts:
-    for minute in split_to_minutes(may_shift):
-        print(minute, minute_cat(minute))
+# for may_shift in may_shifts:
+#     for minute in split_to_minutes(may_shift):
+#         print(minute, minute_cat(minute))
 
+month_calc(may_shifts, HOURLY_RATE, SHIFT_RATES, DRIVES_PAY, HEALTH_PAY)
 
-
-
+# TODO: Write documentations.
 
 
 
