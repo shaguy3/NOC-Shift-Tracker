@@ -3,6 +3,7 @@ from datetime import date, datetime, timedelta
 
 HOURLY_RATE = 30
 SHIFT_RATES = [1, 1.5, 1.5, 2, 2.5, 1.25, 1.5]
+# [day, night, friday morning, saturday night, sabath, first overtime, second overtime]
 DRIVES_PAY = 26
 HEALTH_PAY = 1.2
 
