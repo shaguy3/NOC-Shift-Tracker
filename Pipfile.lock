@@ -18,8 +18,7 @@
     "default": {
         "et-xmlfile": {
             "hashes": [
-                "sha256:614d9722d572f6246302c4491846d2c393c199cfa4edc9af593437691683335b",
-                "sha256:b13faa5b372c813b16254809827ca0f06fc808fdc4d479f5cd629485ea67d4e1"
+                "sha256:614d9722d572f6246302c4491846d2c393c199cfa4edc9af593437691683335b"
             ],
             "version": "==1.0.1"
         },

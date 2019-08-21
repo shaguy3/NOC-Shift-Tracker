@@ -12,9 +12,10 @@ def add_to_db(sheet):
     db_wb = openpyxl.load_workbook('db.xlsx')
     db_sheet = db_wb[db_wb.sheetnames[0]]
     for row in range(4, sheet.max_row + 1):
-        db_sheet.append((sheet['A' + str(row)].value[-5:] + '/' + str(date.today().year)[2:],
-                         sheet['E' + str(row)].value,
-                         sheet['F' + str(row)].value))
+        if not sheet['E' + str(row)].value is None:
+            db_sheet.append((sheet['A' + str(row)].value[-5:] + '/' + str(date.today().year)[2:],
+                             sheet['E' + str(row)].value,
+                             sheet['F' + str(row)].value))
 
     db_wb.save('db.xlsx')
 
@@ -33,6 +34,24 @@ def purge_db():
 
 
 # TODO: Write a function that will organize the db by date.
+def organize_db():
+    db_wb = openpyxl.load_workbook('db.xlsx')
+    db_sheet = db_wb[db_wb.sheetnames[0]]
+
+    for i in range(2, db_sheet.max_row):
+        for j in (i, db_sheet.max_row):
+            if int(db_sheet['A' + str(j)].value[6:]) < int(db_sheet['A' + str(j + 1)].value[6:]):
+                temp_date = db_sheet['A' + str(j)].value
+                db_sheet['A' + str(j)].value = db_sheet['A' + str(j + 1)].value
+                db_sheet['A' + str(j + 1)].value = temp_date
+            elif int(db_sheet['A' + str(j)].value[3:5]) < int(db_sheet['A' + str(j + 1)].value[3:5]):
+                temp_date = db_sheet['A' + str(j)].value
+                db_sheet['A' + str(j)].value = db_sheet['A' + str(j + 1)].value
+                db_sheet['A' + str(j + 1)].value = temp_date
+            elif int(db_sheet['A' + str(j)].value[:2]) < int(db_sheet['A' + str(j + 1)].value[:2]):
+                temp_date = db_sheet['A' + str(j)].value
+                db_sheet['A' + str(j)].value = db_sheet['A' + str(j + 1)].value
+                db_sheet['A' + str(j + 1)].value = temp_date
 
 
 def get_months_shifts(month):
@@ -42,7 +61,10 @@ def get_months_shifts(month):
     current_row = 2
 
     for row in range(current_row, db_sheet.max_row + 1):
+        # print(f'Currently looking in row: {row}')
+        # print(db_sheet['A' + str(current_row)].value[3:5])
         if db_sheet['A' + str(current_row)].value[3:5] == month:
+            # print(f'Got shift at row: {row}')
             shift_date = db_sheet['A' + str(current_row)].value
             shift_start_time = db_sheet['B' + str(current_row)].value
             shift_end_time = db_sheet['C' + str(current_row)].value
@@ -61,7 +83,7 @@ def get_months_shifts(month):
 
             this_shift = [shift_start_datetime, shift_end_datetime]
             this_months_shifts.append(this_shift)
-            current_row += 1
+        current_row += 1
 
     return this_months_shifts
 
@@ -139,15 +161,31 @@ def month_calc(month_shifts, hourly_rate, shift_rates, drives_pay, health_pay):
 # TODO: Write a function that will calculate the net pay for a given month.
 
 
-my_wb = openpyxl.load_workbook('may_2019.xlsx')
-my_sheet = my_wb['Sheet1']
+def main():
 
-may_shifts = get_months_shifts('05')
-# for may_shift in may_shifts:
-#     for minute in split_to_minutes(may_shift):
-#         print(minute, minute_cat(minute))
+    # purge_db()
 
-month_calc(may_shifts, HOURLY_RATE, SHIFT_RATES, DRIVES_PAY, HEALTH_PAY)
+    # my_wb = openpyxl.load_workbook('may_2019.xlsx')
+    # my_sheet = my_wb['Sheet1']
+    # add_to_db(my_sheet)
+    #
+    may_shifts = get_months_shifts('05')
+    # for may_shift in may_shifts:
+    #     for minute in split_to_minutes(may_shift):
+    #         print(minute, minute_cat(minute))
+
+    month_calc(may_shifts, HOURLY_RATE, SHIFT_RATES, DRIVES_PAY, HEALTH_PAY)
+
+    # purge_db()
+    #
+    # my_wb = openpyxl.load_workbook('to_add.xlsx')
+    # my_sheet = my_wb[my_wb.sheetnames[0]]
+    #
+    # add_to_db(my_sheet)
+
+
+if __name__ == '__main__':
+    main()
 
 # TODO: Write documentations.
 
